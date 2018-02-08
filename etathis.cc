@@ -20,6 +20,11 @@ TLorentzVector* pToTLV(Vec4 in){
 	TLorentzVector *out = new TLorentzVector(px,py,pz,e);
 	return out;
 }
+
+TVector3 v3fromv4(Vec4 in){
+	TVector3 r = TVector3(in.px(),in.py(),in.pz());
+}
+
 void check(std::vector<Particle> v, std::vector<float> etas2){
 	cout<<"back: "<<v.back().y()<<"\n";
 	cout<<"eta diff"<<v.back().y()-v[0].y()<<" : "<<etas2.back()-etas2[0]<<"\n"; // see if the delta eta is boost invarient
@@ -38,7 +43,6 @@ void makedata(string filename){
   	float eta, eta2;
   	t->Branch("eta",&eta);
   	t->Branch("etaboost",&eta2);
-  	TLorentzVector *tlv=NULL; // add deletes
   	const float boostB = .434;
   	TVector3 myt3;
   	std::vector<Particle> myparticles(0);
@@ -51,24 +55,24 @@ void makedata(string filename){
       		cout<<"pythia.next() failed"<<"\n";
       		continue;
       	}
-      	if(tlv!=NULL){
-      		delete tlv;
-      		tlv=NULL;
-      	}
       	for(unsigned i=0; i<pythia.event.size();i++){
-      		if(pythia.event[i].isCharged()&&pythia.event[i].status()>80)
+      		if(pythia.event[i].isCharged()&&pythia.event[i].status()>80){
+      			TLorentzVector tlv;
       			ptemp= pythia.event.at(i);
-      			tlv= pToTLV(ptemp.p());
+      			//tlv= pToTLV(ptemp.p());
       			eta = pythia.event.at(i).eta();
-      			cout<<eta<<"\n";
-      			tlv->Boost(0,0,boostB);
+      			tlv.Boost(0,0,boostB);
       			eta2 = (float) tlv->Eta();
       			t->Fill();
+      			if(iEvent%30==0){
+      				cout<<"preboost: "<<eta<<" post: "<<eta2<<"\n";
+      			}
       			myparticles.push_back(ptemp);
       			eta2s.push_back(eta2);
+      		}
       	}
   	}
-  	check(myparticles,eta2s);
+  	//check(myparticles,eta2s);
   	t->Write();
   	f->Write();
   	f->Close();
