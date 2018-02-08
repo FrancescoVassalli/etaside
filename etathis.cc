@@ -1,18 +1,29 @@
 #include "Pythia8/Pythia.h"
+#include "Pythia8/Event.h"
+#include "Pythia8/Basics.h"
 #include "TFile.h"
 #include "TTree.h"
-#include "TRandom3.h"
 #include "TMath.h"
-#include "spline.h"
-#include <fstream>
-#include <array>
-#include <stdexcept>
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 using namespace Pythia8;
 using namespace std;
 
 Double_t E= 2.71828182845904523536;
 
+TLorentzVector* pToTLV(Vec4 in){
+	Double_t px = (double)in.px();
+	Double_t py = (double)in.py();
+	Double_t pz = (double)in.pz();
+	Double_t e =  (double)in.e();
+	TLorentzVector *out = new TLorentzVector(px,py,pz,e);
+	return out;
+}
+void check(std::vector<Particle> v, std::vector<float> etas2){
+	cout<<"back: "<<v.back().y()<<"\n";
+	cout<<"eta diff"<<v.back().y()-v[0].y()<<" : "<<etas2.back()-etas2[0]<<"\n"; // see if the delta eta is boost invarient
+}
 
 void makedata(string filename){
 	Pythia pythia;
@@ -20,28 +31,44 @@ void makedata(string filename){
   	pythia.readString("SoftQCD:nonDiffractive = on");
   	pythia.readString("Random::setSeed = on");
   	pythia.readString("Random::seed =0");
+  	pythia.init();
 
   	TFile* f = new TFile(filename.c_str(),"RECREATE");
   	TTree* t=new TTree("tree100","events");
-  	float eta;
+  	float eta, eta2;
   	t->Branch("eta",&eta);
-
-  	std::vector<Particles> myparticles(0);
+  	t->Branch("etaboost",&eta2);
+  	TLorentzVector *tlv=NULL; // add deletes
+  	const float boostB = .434;
+  	TVector3 myt3;
+  	std::vector<Particle> myparticles(0);
   	Particle ptemp;
+  	std::vector<float> eta2s(0);
   	for(int iEvent=0; iEvent<1000; iEvent++){
   		if(iEvent%30==0)  
   			cout<<"Event N: "<<iEvent<<'\n';
     	if (!pythia.next()){
       		cout<<"pythia.next() failed"<<"\n";
       		continue;
+      	}
+      	if(tlv!=NULL){
+      		delete tlv;
+      		tlv=NULL;
+      	}
       	for(unsigned i=0; i<pythia.event.size();i++){
-      		if(pythia.event[i].isCharged()&&pythia.event[i].isFinal())
+      		if(pythia.event[i].isCharged()&&pythia.event[i].status()>80)
       			ptemp= pythia.event.at(i);
+      			tlv= pToTLV(ptemp.p());
       			eta = pythia.event.at(i).eta();
+      			cout<<eta<<"\n";
+      			tlv->Boost(0,0,boostB);
+      			eta2 = (float) tlv->Eta();
       			t->Fill();
       			myparticles.push_back(ptemp);
+      			eta2s.push_back(eta2);
       	}
   	}
+  	check(myparticles,eta2s);
   	t->Write();
   	f->Write();
   	f->Close();
