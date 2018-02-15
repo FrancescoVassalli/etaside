@@ -44,7 +44,7 @@ void makedata(string filename){
   	std::vector<Particle> myparticles(0);
   	Particle ptemp;
   	std::vector<float> eta2s(0);
-  	for(int iEvent=0; iEvent<10000; iEvent++){
+  	for(int iEvent=0; iEvent<100000; iEvent++){
   		if(iEvent%30==0)  
   			cout<<"Event N: "<<iEvent<<'\n';
     	if (!pythia.next()){
