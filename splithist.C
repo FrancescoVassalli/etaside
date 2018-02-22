@@ -85,11 +85,11 @@ void splithist(){
 		cout<<"error: "<<splithists[i]->GetBinError(nBins)<<'\n';
 	}
 	etasolve->Scale(1/etasolve->Integral());
-	etasolve->SetAxisRange(0,.026,"Y");
+	//etasolve->SetAxisRange(0.01,.026,"Y");
 	etasolve->Draw();
 	tc->SaveAs("calced.pdf");
 	etaproper->Scale(1/etaproper->Integral());
-	etaproper->SetAxisRange(0,.026,"Y");
+	etaproper->SetAxisRange(0.01,.026,"Y");
 	etaproper->Draw();
 	tc->Print("proper.pdf");
 
