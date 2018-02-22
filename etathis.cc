@@ -21,7 +21,7 @@ struct StarParticle
 
 namespace global{
   const int nBins=53;
-  double bins[54]= {-2.65,-2.55,-2.45,-2.35,-2.25,-2.15,-2.05,-1.95,-1.85,-1.75,-1.65,-1.55,-1.45,-1.35,-1.25,-1.15,-1.05,-0.95,-0.85,-0.75,-0.65,-0.55,-0.45,-0.35,-0.25,-0.15,-0.05,0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95,1.05,1.15,1.25,1.35,1.45,1.55,1.65,1.75,1.85,1.95,2.05,2.15,2.25,2.35,2.45,2.55,2.65};
+  double bins[54]= {-2.7,-2.6,-2.5,-2.4,-2.3,-2.2,-2.1,-2,-1.9,-1.8,-1.7,-1.6,-1.5,-1.4,-1.3,-1.2,-1.1,-1,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.05,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6};
   TH1F *binfinder = new TH1F("binner","",nBins,bins);
 }
 
@@ -62,12 +62,11 @@ void makedata(string filename){
   float beta[global::nBins+1];
   string temp;
   string etastr="eta";
-  for(int i=0; i<=global::nBins+1;i++){
-    global::bins[i] = global::bins[i]-.05; //accidentally put the bin middles in instead of the bin lows
+  for(int i=0; i<=global::nBins;i++){
     temp = etastr+ std::to_string(i);
     t->Branch(temp.c_str(),&beta[i]);
   }
-  TLorentzVector *tlv=NULL; // add deletes
+  TLorentzVector *tlv=NULL; 
   TLorentzVector *tl2 = NULL;
   const float boostB = .434;
   TVector3 myt3;
@@ -98,20 +97,19 @@ void makedata(string filename){
       		ptemp= pythia.event.at(i);
       		tlv= pToTLV(ptemp.p());
       		eta = pythia.event.at(i).eta();
-          cout<<"pre: "<<eta;
+          //cout<<"pre: "<<eta;
       		tlv->Boost(0,0,boostB);
       		eta2 = (float) tlv->Eta();
-          cout<<" post: "<<eta2;
+          //cout<<" post: "<<eta2;
           tl2 = new TLorentzVector(tlv->Px(),tlv->Py(),tlv->Pz(),tlv->E());
           binNumber = calcBinNumber(eta2);
-          //binNumber--;
           if (binNumber>=0)
           {
             tl2->Boost(0,0,-1*boostB);
             beta[binNumber]= (float) tl2->Eta();
-            cout<<" starred: "<<beta[binNumber]<<'\n';
-            t->Fill();
+            //cout<<" starred: "<<beta[binNumber]<<'\n';
           }
+          t->Fill();
         }
       }
   	}
