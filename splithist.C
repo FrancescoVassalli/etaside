@@ -16,6 +16,7 @@ double addError(double e1, double e2){
 void splithist(){
 	TCanvas *tc = new TCanvas();
 	TChain *dijet_tree = new TChain("tree100");
+	TFile *output = new TFile("bindists.root","recreate");
 	string fname = "etadist.root";
 	dijet_tree->Add(fname.c_str());
 	gStyle->SetOptStat(0);
@@ -52,13 +53,16 @@ void splithist(){
     	splithists[i]->Sumw2();
     	if(splithists[i]->Integral()!=0){
     		splithists[i]->Scale(1/splithists[i]->Integral());
+    	}
+    	else{
     		cout<<"Failed number: "<<i<<'\n';
     	}
     	splithists[i]->SetAxisRange(0,.85,"Y");
     	splithists[i]->Draw();
-    	temp = en+std::to_string(i)+".pdf";
-    	tc->SaveAs(temp.c_str());
+    	tc->Write();
     }
+    output->Close();
+    delete output;
     TH1F *etastar = new TH1F("eta*","#eta* distribution",myBinN,mybins);
     etastar->SetXTitle("#eta*");
     etastar->SetYTitle("Normalized count");
@@ -188,7 +192,7 @@ void splithist(){
 	for (int i = 0; i < 8; ++i)
 	{
 		temp = "solve" + std::to_string(i);
-		calAT[i] = new TH1F(temp.c_str(),"calculated #eta distribution",nBins,bins);
+		calAT[i] = new TH1F(temp.c_str(),"Calculated #eta Distribution",nBins,bins);
 		calAT[i]->Sumw2();
 		calAT[i]->SetXTitle("#eta");
 		calAT[i]->SetYTitle("Count");
@@ -202,8 +206,26 @@ void splithist(){
 			}
 		}
 		calAT[i]->SetMarkerStyle(7);
+		calAT[i]->SetAxisRange(-2.7,2.6,"X");
 		calAT[i]->Draw();
 		temp = temp+".pdf";
 		tc->SaveAs(temp.c_str());
 	}
+	delete tc;
+	tc = new TCanvas("tc","Centrality",1280,720);
+	tc->Divide(4,2,.005,.005);
+	calAT[0]->SetTitle("60-90");
+	calAT[1]->SetTitle("40-60");
+	calAT[2]->SetTitle("30-40");
+	calAT[3]->SetTitle("20-30");
+	calAT[4]->SetTitle("10-20");
+	calAT[5]->SetTitle("5-10");
+	calAT[6]->SetTitle("1-5");
+	calAT[7]->SetTitle("0-1");
+	for (int i = 0; i < 8; ++i)
+	{
+		tc->cd(i+1);
+		calAT[i]->Draw();
+	}
+	tc->SaveAs("Atlas p-Pb eta.pdf");
 }
