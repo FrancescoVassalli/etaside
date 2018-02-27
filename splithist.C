@@ -15,10 +15,7 @@ double addError(double e1, double e2){
 
 void splithist(){
 	TCanvas *tc = new TCanvas();
-	TChain *dijet_tree = new TChain("tree100");
-	TFile *output = new TFile("bindists.root","recreate");
-	string fname = "etadist.root";
-	dijet_tree->Add(fname.c_str());
+	TFile *output = new TFile("bindists.root");
 	gStyle->SetOptStat(0);
     gStyle->SetErrorX(0);
 
@@ -36,33 +33,8 @@ void splithist(){
     }
 
     std::vector<TH1F*> splithists(myBinN+1);
-    string en = "eta";
-    string star = "#eta*";
-    string temp;
-    string temp2;
-    for (unsigned i = 0; i < splithists.size(); ++i)
-    {
-    	temp = en+std::to_string(i);
-    	temp2  = star+"="+std::to_string(mybins[i])+" #eta distribution";
-    	splithists[i] = new TH1F(temp.c_str(),temp2.c_str(),myBinN,mybins);
-    	splithists[i]->SetXTitle("#eta");
-    	splithists[i]->SetYTitle("Normalized count");
-    	splithists[i]->SetMarkerStyle(7);
-    	temp = temp+">>"+temp;
-    	dijet_tree->Draw(temp.c_str(),"","goff");
-    	splithists[i]->Sumw2();
-    	if(splithists[i]->Integral()!=0){
-    		splithists[i]->Scale(1/splithists[i]->Integral());
-    	}
-    	else{
-    		cout<<"Failed number: "<<i<<'\n';
-    	}
-    	splithists[i]->SetAxisRange(0,.85,"Y");
-    	splithists[i]->Draw();
-    	tc->Write();
-    }
-    output->Close();
-    delete output;
+    /* get the hists from the file*/
+    
     TH1F *etastar = new TH1F("eta*","#eta* distribution",myBinN,mybins);
     etastar->SetXTitle("#eta*");
     etastar->SetYTitle("Normalized count");
