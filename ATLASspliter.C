@@ -185,9 +185,10 @@ void ATLASspliter(){
 		{
 			bintemp=0;
 			errortemp=0;
+			/* for each bin in the hist sum the total of that bin from all the transformations*/
 			for(int k=0; k<=nBins;k++){
-				bintemp+= transformations[i][j]->GetBinContent(k);
-				errortemp = addError(errortemp,transformations[i][j]->GetBinError(k));
+				bintemp+= transformations[i][k]->GetBinContent(j);
+				errortemp = addError(errortemp,transformations[i][k]->GetBinError(j));
 			}
 			calAT[i]->SetBinContent(j,bintemp);
 			calAT[i]->SetBinError(j, errortemp);
@@ -220,7 +221,7 @@ void ATLASspliter(){
 		calAT[i]->SetLabelSize(.05);
     	calAT[i]->GetYaxis()->SetTitleSize(.05);
     	calAT[i]->GetYaxis()->SetLabelSize(.05);
-    	calAT[i]->GetYaxis()->SetTitleOffset(.7);
+    	calAT[i]->GetYaxis()->SetTitleOffset(1);
 		calAT[i]->SetLabelSize(.07);
 		calAT[i]->SetMarkerStyle(kFullSquare);
 		calAT[i]->Draw("P hist");
