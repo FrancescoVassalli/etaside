@@ -12,8 +12,17 @@ using namespace std;
 double addError(double e1, double e2){
 	return TMath::Power((e1*e1+e2*e2),.05);
 }
+/*std::vector<TH1F*> clonelist(std::vector<TH1F*> v,std::string name){
+	std::vector<TH1F*> r(0);
+	std::string temp;
+	for(unsigned i=0; i<v.size();i++){
+		temp = name+std::to_string(i);
+		r.push_back((TH1F*)v[i]->Clone(temp.c_str()));
+	}
+	return r;
+}*/
 
-void splithist(){
+void ATLASspliter(){
 	TCanvas *tc = new TCanvas();
 	TFile *output = new TFile("bindists.root");
 	gStyle->SetOptStat(0);
@@ -32,33 +41,50 @@ void splithist(){
     	mybins[i] = binstart+.1*i;
     }
 
-    std::vector<TH1F*> splithists(myBinN+1);
+    std::queue<TH1F*> splithists;
     /* get the hists from the file*/
-    
+    string temp;
+    string temp2 ="eta";
+    int loadcounter=14;
+    TH1F* htemp=NULL;
+    while (loadcounter<=67){
+    	temp = temp2+std::to_string(loadcounter)+";1";
+    	splithists.push((TH1F*) output->Get(temp.c_str()));
+    	splithists.back()->Draw();
+    	loadcounter++;
+    }
    
 	float bintemp;
 	double errortemp;
-	std::vector<TH1F*> smallsplit(nBins+1);
+	string en = "eta";
+	string star = "eta*";
+	std::queue<TH1F*> smallsplit;
 	en = en+"2-";
-	for (unsigned i = 0; i < smallsplit.size(); ++i)
-	{
-		temp  = en +std::to_string(i);
-		temp2 = star+"="+std::to_string(-2.7+.1*i);
-		smallsplit[i] = new TH1F (temp.c_str(),temp2.c_str(),nBins,bins);
-		smallsplit[i]->Sumw2();
-		for (int j = 14; j <= 67; ++j)
-		{
-			bintemp=0;
-			errortemp=0;
-			for (int k = 14; k <= 67; ++k) 
+	int tempint;
+	loadcounter=14;
+	/* make the smaller hists*/
+	while(loadcounter<=67){
+		temp  = en +std::to_string(loadcounter);
+		temp2 = star+"="+std::to_string(-2.7+.1*(loadcounter-14));
+		htemp = new TH1F(temp.c_str(),temp2.c_str(),nBins,bins);
+		htemp->Sumw2();
+		for(int bincounter=14;bincounter<=67;bincounter++){
+			if (splithists.front()==NULL)
 			{
-				bintemp+=splithists[j]->GetBinContent(k);
-				errortemp += addError(errortemp, splithists[j]->GetBinError(k));
+				cout<<"Front is NULL"<<std::endl;
 			}
-			smallsplit[i]->SetBinContent(j-13,bintemp);
-			smallsplit[i]->SetBinError(j-13,errortemp);
+			htemp->SetBinContent(bincounter-13,splithists.front()->GetBinContent(bincounter));
+			htemp->SetBinError(bincounter-13,splithists.front()->GetBinError(bincounter));
 		}
+		splithists.pop();
+
+		htemp->Draw("e1");
+		temp = temp+".pdf";
+		//tc->SaveAs(temp.c_str());
+		smallsplit.push(htemp);
+		loadcounter++;
 	}
+	/*set the ATLAS data*/
 	std::vector<TH1F*> atlasstar(8);
 	float d90[nBins+1] = {8.681,8.556,8.791,8.889,8.937,8.969,8.993,9.109,9.059,9.093,9.093,9.03,9.016,8.975,8.898,8.868,8.825,8.698,8.672,8.585,8.524,8.456,8.375,8.308,8.325,8.285,8.253,8.214,8.284,8.358,8.415,8.473,8.609,8.686,8.723,8.839,8.955,8.993,9.089,9.212,9.221,9.265,9.34,9.41,9.405,9.405,9.433,9.444,9.372,9.489,9.474,9.34,9.364,9.23};
 	float d60[nBins+1] = {17.875,17.76,18.213,18.377,18.472,18.499,18.628,18.596,18.494,18.582,18.48,18.353,18.292,18.125,18.013,17.827,17.725,17.564,17.317,17.067,16.925,16.781,16.599,16.404,16.29,16.246,16.127,16.125,16.062,16.159,16.266,16.337,16.445,16.639,16.697,16.842,16.913,17.014,17.103,17.156,17.251,17.275,17.306,17.331,17.293,17.192,17.143,17.104,17.049,17.036,16.869,16.8,16.576,16.135};
@@ -77,14 +103,38 @@ void splithist(){
 	float e10[nBins+1]= {0.371,0.334,0.336,0.349,0.35,0.365,0.366,0.366,0.367,0.367,0.37,0.369,0.364,0.363,0.362,0.359,0.358,0.356,0.353,0.35,0.345,0.34,0.347,0.343,0.339,0.334,0.332,0.333,0.33,0.331,0.33,0.328,0.339,0.339,0.337,0.339,0.338,0.34,0.337,0.334,0.333,0.332,0.341,0.34,0.336,0.331,0.331,0.33,0.329,0.31,0.298,0.317,0.315,0.544};
 	float e5[nBins+1]= {0.509,0.465,0.467,0.49,0.49,0.507,0.511,0.511,0.513,0.512,0.516,0.515,0.506,0.51,0.503,0.504,0.5,0.497,0.491,0.486,0.483,0.472,0.487,0.48,0.476,0.472,0.467,0.465,0.461,0.46,0.459,0.457,0.472,0.472,0.47,0.471,0.471,0.47,0.47,0.464,0.465,0.46,0.47,0.467,0.464,0.458,0.454,0.445,0.443,0.422,0.407,0.429,0.427,0.733};
 	float e1[nBins+1]= {0.529,0.498,0.497,0.519,0.526,0.541,0.543,0.54,0.551,0.549,0.547,0.545,0.544,0.54,0.532,0.535,0.522,0.521,0.513,0.517,0.51,0.502,0.511,0.51,0.501,0.499,0.494,0.49,0.485,0.481,0.483,0.48,0.498,0.495,0.493,0.492,0.491,0.488,0.483,0.483,0.474,0.472,0.489,0.485,0.482,0.474,0.464,0.455,0.456,0.432,0.424,0.449,0.443,0.825};
+	/* take the small histograms and make transformations for each centrality class*/
 	std::vector<TH1F*> transformations[atlasstar.size()];
 	for(unsigned i=0; i<atlasstar.size();i++){
 		temp = atlasstr+std::to_string(i);
 		temp2 = star+" "+atlasstr;
-		atlasstar[i] = new TH1F(temp.c_str(),temp2.c_str(),nBins,bins);
-		atlasstar[i]->Sumw2();
-		transformations[i] = smallsplit;
+		htemp = new TH1F(temp.c_str(),temp2.c_str(),nBins,bins);
+		htemp->Sumw2();
+		atlasstar[i] = htemp;
 	}
+	int clonecounter =0;
+	while(!smallsplit.empty()){ // load the small splits into transformations
+		// need to make clones
+		temp = "90-"+std::to_string(clonecounter);
+		transformations[0].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "60-"+std::to_string(clonecounter);
+		transformations[1].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "40-"+std::to_string(clonecounter);
+		transformations[2].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "30-"+std::to_string(clonecounter);
+		transformations[3].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "20-"+std::to_string(clonecounter);
+		transformations[4].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "10-"+std::to_string(clonecounter);
+		transformations[5].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "5-"+std::to_string(clonecounter);
+		transformations[6].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		temp = "1-"+std::to_string(clonecounter);
+		transformations[7].push_back((TH1F*) smallsplit.front()->Clone(temp.c_str()));
+		smallsplit.pop();
+		clonecounter++;
+	}
+	/* load the ATALS data into the hists*/
 	for (int i = 0; i <= nBins; ++i) 
 	{
 		atlasstar[0]->SetBinContent(i,d90[i]);
@@ -104,17 +154,51 @@ void splithist(){
 		atlasstar[6]->SetBinError(i,e5[i]);
 		atlasstar[7]->SetBinError(i,e1[i]);
 	}
+	/* weight the transformations */
 	for(int i=0; i<=nBins;i++)	
 	{
 		transformations[0][i]->Scale(atlasstar[0]->GetBinContent(i));
+		//cout<<atlasstar[0]->GetBinContent(i)<<" : ";
 		transformations[1][i]->Scale(atlasstar[1]->GetBinContent(i));
+		//cout<<atlasstar[1]->GetBinContent(i)<<" : ";
 		transformations[2][i]->Scale(atlasstar[2]->GetBinContent(i));
+		//cout<<atlasstar[2]->GetBinContent(i)<<" : ";
 		transformations[3][i]->Scale(atlasstar[3]->GetBinContent(i));
+		//cout<<atlasstar[3]->GetBinContent(i)<<'\n';
 		transformations[4][i]->Scale(atlasstar[4]->GetBinContent(i));
 		transformations[5][i]->Scale(atlasstar[5]->GetBinContent(i));
 		transformations[6][i]->Scale(atlasstar[6]->GetBinContent(i));
 		transformations[7][i]->Scale(atlasstar[7]->GetBinContent(i));
 	}
+/*test code
+	temp="transformed"+std::to_string(0)+".pdf";
+	transformations[0][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(1)+".pdf";
+	transformations[1][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(2)+".pdf";
+	transformations[2][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(3)+".pdf";
+	transformations[3][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(4)+".pdf";
+	transformations[4][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(5)+".pdf";
+	transformations[5][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(6)+".pdf";
+	transformations[6][10]->Draw();
+	tc->SaveAs(temp.c_str());
+	temp="transformed"+std::to_string(7)+".pdf";
+	transformations[7][10]->Draw();
+	tc->SaveAs(temp.c_str());
+
+	end test code*/
+
+	/*use the transformations to make the untransformed hists for each centrality*/
 	std::vector<TH1F*> calAT(8);
 	for (int i = 0; i < 8; ++i)
 	{
@@ -123,14 +207,16 @@ void splithist(){
 		calAT[i]->Sumw2();
 		calAT[i]->SetXTitle("#eta");
 		calAT[i]->SetYTitle("Count");
-		bintemp=0;
-		errortemp=0;
 		for (int j = 0; j <= nBins; ++j)
 		{
+			bintemp=0;
+			errortemp=0;
 			for(int k=0; k<=nBins;k++){
-				calAT[i]->SetBinContent(k, calAT[i]->GetBinContent(k)+ transformations[i][j]->GetBinContent(k));
-				calAT[i]->SetBinError(k, addError(calAT[i]->GetBinError(k),transformations[i][j]->GetBinError(k)));
+				bintemp+= transformations[i][j]->GetBinContent(k);
+				errortemp = addError(errortemp,transformations[i][j]->GetBinError(k));
 			}
+			calAT[i]->SetBinContent(j,bintemp);
+			calAT[i]->SetBinError(j, errortemp);
 		}
 		calAT[i]->SetMarkerStyle(7);
 		calAT[i]->SetAxisRange(-2.7,2.6,"X");
@@ -138,21 +224,45 @@ void splithist(){
 		temp = temp+".pdf";
 		tc->SaveAs(temp.c_str());
 	}
+	TH1F* hcompare= (TH1F*) calAT[0]->Clone("compare");
+	/* draw the untransformed hists at each centrality*/
 	delete tc;
 	tc = new TCanvas("tc","Centrality",1280,720);
-	tc->Divide(4,2,.005,.005);
-	calAT[0]->SetTitle("60-90");
-	calAT[1]->SetTitle("40-60");
-	calAT[2]->SetTitle("30-40");
-	calAT[3]->SetTitle("20-30");
-	calAT[4]->SetTitle("10-20");
-	calAT[5]->SetTitle("5-10");
-	calAT[6]->SetTitle("1-5");
-	calAT[7]->SetTitle("0-1");
+	tc->Divide(4,2,.001,.001);
+	calAT[0]->SetTitle("60-90\%");
+	calAT[1]->SetTitle("40-60\%");
+	calAT[2]->SetTitle("30-40\%");
+	calAT[3]->SetTitle("20-30\%");
+	calAT[4]->SetTitle("10-20\%");
+	calAT[5]->SetTitle("5-10\%");
+	calAT[6]->SetTitle("1-5\%");
+	calAT[7]->SetTitle("0-1\%");
 	for (int i = 0; i < 8; ++i)
 	{
 		tc->cd(i+1);
+    	calAT[i]->SetTitleOffset(.7);
+		calAT[i]->SetTitleSize(.05);
+    	calAT[i]->GetYaxis()->SetTitleSize(.05);
+    	calAT[i]->GetYaxis()->SetLabelSize(.05);
+		calAT[i]->SetLabelSize(.07);
 		calAT[i]->Draw();
 	}
 	tc->SaveAs("Atlas p-Pb eta.pdf");
+	tc->SaveAs("Atlaseta.root");
+	delete tc;
+	tc= new TCanvas();
+	TFile* output2 = new TFile("ATLAScorrect.root");
+	htemp = (TH1F*) output2->Get("corrected;1");
+	htemp->Sumw2();
+	if(htemp==NULL){
+		cout<<"Null divide"<<std::endl;
+	}
+	else{
+		htemp->Divide(hcompare,htemp,1,1,"");
+		htemp->SetTitle("bin by bin correction divided by boost ratio 60-90\%");
+		htemp->Draw("Pe");
+		tc->SaveAs("divided.pdf");
+
+	}
+
 }
