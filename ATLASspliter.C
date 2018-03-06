@@ -154,49 +154,23 @@ void ATLASspliter(){
 		atlasstar[6]->SetBinError(i,e5[i]);
 		atlasstar[7]->SetBinError(i,e1[i]);
 	}
+	/* clone the unmodified data*/
+	std::vector<TH1F*> aClone(8);
+	for(unsigned i=0; i<aClone.size();++i){
+		aClone[i] = (TH1F*) atlasstar[i]->Clone("unmodified");
+	}
 	/* weight the transformations */
 	for(int i=0; i<=nBins;i++)	
 	{
 		transformations[0][i]->Scale(atlasstar[0]->GetBinContent(i));
-		//cout<<atlasstar[0]->GetBinContent(i)<<" : ";
 		transformations[1][i]->Scale(atlasstar[1]->GetBinContent(i));
-		//cout<<atlasstar[1]->GetBinContent(i)<<" : ";
 		transformations[2][i]->Scale(atlasstar[2]->GetBinContent(i));
-		//cout<<atlasstar[2]->GetBinContent(i)<<" : ";
 		transformations[3][i]->Scale(atlasstar[3]->GetBinContent(i));
-		//cout<<atlasstar[3]->GetBinContent(i)<<'\n';
 		transformations[4][i]->Scale(atlasstar[4]->GetBinContent(i));
 		transformations[5][i]->Scale(atlasstar[5]->GetBinContent(i));
 		transformations[6][i]->Scale(atlasstar[6]->GetBinContent(i));
 		transformations[7][i]->Scale(atlasstar[7]->GetBinContent(i));
 	}
-/*test code
-	temp="transformed"+std::to_string(0)+".pdf";
-	transformations[0][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(1)+".pdf";
-	transformations[1][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(2)+".pdf";
-	transformations[2][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(3)+".pdf";
-	transformations[3][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(4)+".pdf";
-	transformations[4][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(5)+".pdf";
-	transformations[5][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(6)+".pdf";
-	transformations[6][10]->Draw();
-	tc->SaveAs(temp.c_str());
-	temp="transformed"+std::to_string(7)+".pdf";
-	transformations[7][10]->Draw();
-	tc->SaveAs(temp.c_str());
-
-	end test code*/
 
 	/*use the transformations to make the untransformed hists for each centrality*/
 	std::vector<TH1F*> calAT(8);
@@ -237,32 +211,34 @@ void ATLASspliter(){
 	calAT[5]->SetTitle("5-10\%");
 	calAT[6]->SetTitle("1-5\%");
 	calAT[7]->SetTitle("0-1\%");
+	TLegend *tl=new TLegend(.35,.2,.66,.4);
 	for (int i = 0; i < 8; ++i)
 	{
 		tc->cd(i+1);
     	calAT[i]->SetTitleOffset(.7);
 		calAT[i]->SetTitleSize(.05);
+		calAT[i]->SetLabelSize(.05);
     	calAT[i]->GetYaxis()->SetTitleSize(.05);
     	calAT[i]->GetYaxis()->SetLabelSize(.05);
+    	calAT[i]->GetYaxis()->SetTitleOffset(.7);
 		calAT[i]->SetLabelSize(.07);
-		calAT[i]->Draw();
+		calAT[i]->SetMarkerStyle(kFullSquare);
+		calAT[i]->Draw("P hist");
+		aClone[i]->SetMarkerStyle(kOpenCircle);
+		aClone[i]->SetMarkerColor(kRed);
+		aClone[i]->Draw("P hist same");
 	}
+	tc->cd(1);
+	tl->AddEntry(calAT[0],"#eta","p");
+	tl->AddEntry(aClone[0],"#eta*","p");
+	tl->Draw();
 	tc->SaveAs("Atlas p-Pb eta.pdf");
 	tc->SaveAs("Atlaseta.root");
-	delete tc;
-	tc= new TCanvas();
-	TFile* output2 = new TFile("ATLAScorrect.root");
-	htemp = (TH1F*) output2->Get("corrected;1");
-	htemp->Sumw2();
-	if(htemp==NULL){
-		cout<<"Null divide"<<std::endl;
+	for (int i = 0; i < 8; ++i)
+	{
+    	calAT[i]->GetYaxis()->SetTitle("Ratio");
+		tc->cd(i+1);
+		calAT[i]->Divide(aClone[i]);
+		calAT[i]->Draw("P hist");
 	}
-	else{
-		htemp->Divide(hcompare,htemp,1,1,"");
-		htemp->SetTitle("bin by bin correction divided by boost ratio 60-90\%");
-		htemp->Draw("Pe");
-		tc->SaveAs("divided.pdf");
-
-	}
-
 }
