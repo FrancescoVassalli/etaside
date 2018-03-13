@@ -163,6 +163,7 @@ void Bzmath(){
 	tl->Draw();
 	gPad->SetTicky();
 	gPad->SetTickx();
+	
 	//gPad->SetBottomMargin(.2);
 	tc->SaveAs("functioncolor.pdf");
 }
