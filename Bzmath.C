@@ -15,11 +15,18 @@ namespace nicehists{
 		}
 	}
 
-	void makeHistColors(TH1F** h, int n){
+	void makeMarkerNice(TH1F** h, int n){
 		for (int i = 1; i < n; ++i)
 		{
 			(*h)->SetMarkerStyle(styles[i-1]);
 			(*h)->SetMarkerColor(colors[i-1]);
+			h++;
+		}
+	}
+	void makeLineColors(TH1F** h, int n){
+		for (int i = 1; i < n; ++i)
+		{
+			(*h)->SetLineColor(colors[i-1]);
 			h++;
 		}
 	}
@@ -135,45 +142,27 @@ void Bzmath(){
 	}
 	tc->SaveAs("Allfunctions.pdf");
 	delete tc;
+	/* start of the function color plot*/
 	tc = new TCanvas("tc","Centrality",720,680);
-	tc->Divide(1,2,.001,.001);
-	tc->cd(1);
-	nicehists::makeHistColors(function,classes-4);
-	nicehists::makeHistColors(function+4,classes-4);
-	TLegend *tl=new TLegend(.7,.6,.8,.9);
-	nicehists::makeLegend(tl,function,4,centrality);
-	function[0]->SetAxisRange(1.91,2.8,"Y");
+	//tc->Divide(1,2,.001,.001);
+	//tc->cd(1);
+	nicehists::makeHistColors(function,classes);
+	TLegend *tl=new TLegend(.7,.6,.8,.9,"wounded nucleon model p-Pb 5.02 TeV boost corrected");
+	nicehists::makeLegend(tl,function,classes,centrality);
+	function[0]->SetAxisRange(0,4.09,"Y");
 	function[0]->GetYaxis()->SetTitleOffset(0.6);
 	//F(#eta) wounded nucleon model p-Pb 5.02 TeV boost corrected
 	function[0]->SetTitle("");
 	function[0]->SetTitleSize(.1);
 	function[0]->SetTitleOffset(.7);
-	function[0]->Draw("P hist");
-	for (int i = 1; i < 4; ++i)
+	function[0]->Draw("l hist");
+	for (int i = 1; i < classes; ++i)
 	{
-		function[i]->Draw("P hist same");
+		function[i]->Draw("l hist same");
 	}
 	tl->Draw();
 	gPad->SetTicky();
 	gPad->SetTickx();
-	gPad->SetBottomMargin(0);
-	tc->cd(2);
-	gPad->SetTopMargin(0);
-	gPad->SetTicky();
-	gPad->SetTickx();
-	gPad->SetBottomMargin(.2);
-	TLegend *tl2=new TLegend(.7,.6,.8,.9);
-	nicehists::makeLegend(tl2,function+4,4,centrality+4);
-	function[4]->SetTitleSize(.1);
-	function[4]->SetTitle("");
-	function[4]->SetAxisRange(1.9,4.3,"Y");
-	function[4]->SetTitleOffset(.7);
-	function[4]->GetYaxis()->SetTitleOffset(.5);
-	function[4]->Draw("P hist");
-	for (int i = 5; i < classes; ++i)
-	{
-		function[i]->Draw("P hist same");
-	}
-	tl2->Draw();
+	//gPad->SetBottomMargin(.2);
 	tc->SaveAs("functioncolor.pdf");
 }
