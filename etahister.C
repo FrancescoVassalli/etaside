@@ -12,7 +12,8 @@ using namespace std;
 void etahister(){
 	TCanvas *tc = new TCanvas();
 	TChain *dijet_tree = new TChain("tree100");
-	string fname = "etadbig.root";
+    TFile *output  = new TFile("ATLAScorrect.root","recreate");
+	string fname = "etadist.root";
 	dijet_tree->Add(fname.c_str());
 	gStyle->SetOptStat(0);
     gStyle->SetErrorX(0);
@@ -64,6 +65,7 @@ void etahister(){
     h_rat->SetLineWidth(3);
     h_rat->Draw("Pe");
     tc->Print("boost ratio.pdf");
+    h_rat->Write("ratio");
 
     tc->Clear("D");
 
@@ -81,9 +83,11 @@ void etahister(){
     	h_f->SetBinError(i,errors[i]);
     }
     h_f->Sumw2();
+    h_f->Write("star");
     //h_f->Scale(1/h_f->Integral(),"width");
     //h_fe->Scale(1/h_fe->Integral(),"width");
     h_fe->Divide(h_f,h_rat,1,1);
+    h_fe->Write("corrected");
     h_f->SetMarkerStyle(20);
     h_f->SetLineWidth(3);
     h_fe->SetMarkerStyle(20);
@@ -93,7 +97,6 @@ void etahister(){
     h_fe->SetLineWidth(3);
     tl->AddEntry(h_f,"p-Pb 60-90\%","l");
     tl->AddEntry(h_fe,"pp boost ratio correction","l");
-    tl->AddEntry(h_f, "Atlas p-Pb 60-90 \%","p");
     h_fe->Draw("Pe");
     h_f->Draw("Pe same");
    	tl->Draw();
@@ -169,6 +172,9 @@ void etahister(){
     tl2->AddEntry(h_fe,"p-Pb 60-90\% (ATLAS), boost-corrected","p");
     tl2->Draw();
     tc->SaveAs("twotabs.pdf");
+    h_fe->SetTitle("corrected");
+    output->Close();
+    delete output;
 
 
 }

@@ -1,2 +1,2 @@
 etathis: etathis.cc
-	g++ etathis.cc /home/user/pythia8226/lib/libpythia8.a -o etathis  -I/home/user/pythia8226/include -O2 -ansi -pedantic -W -Wall -Wshadow -fPIC -Wl,-rpath,/home/user/pythia8226/lib -ldl `root-config --libs --cflags`
+	g++ etathis.cc /home/user/pythia8226/lib/libpythia8.a -g -o etathis  -I/home/user/pythia8226/include -O2 -ansi -pedantic -W -Wall -Wshadow -fPIC -Wl,-rpath,/home/user/pythia8226/lib -ldl `root-config --libs --cflags`

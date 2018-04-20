@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace nicehists{
-	short colors[7]={kRed,kBlue,kGreen+2,kMagenta+3,kOrange+4,kCyan+1,kGray+1};
+	short colors[7]={kRed,kBlue,kGreen+2,kMagenta+3,kOrange+4,kCyan+1,kMagenta-7};
 	short styles[7]={kFullCircle,kOpenSquare,kFullTriangleUp,kFullDiamond,kFullCross,kFullStar,kOpenFourTrianglesX};
 	void makeBins(float* bins, int min, int nBins, float width){
 		for(int i=0; i<=nBins;++i){
@@ -30,15 +30,35 @@ namespace nicehists{
 			h++;
 		}
 	}
-	void makeLegend(TLegend* tl, TH1F** h, int n, std::string *titles){
+	void makeLegendPoint(TLegend* tl, TH1F** h, int n, std::string *titles){
 		for (int i = 0; i < n; ++i)
 		{
 			tl->AddEntry((*h++),titles++->c_str(),"p");
 		}
 	}
+	void makeLegendLine(TLegend* tl, TH1F** h, int n, std::string *titles){
+		for (int i = 0; i < n; ++i)
+		{
+			tl->AddEntry((*h++),titles++->c_str(),"l");
+		}
+	}
 	void makeNiceHist(TH1* h){
 		h->SetMarkerStyle(kFullTriangleUp);
 	}
+}
+
+void myMarkerText(Double_t x,Double_t y,Int_t color,Int_t mstyle, const char *text,Float_t msize,Double_t tsize)
+{
+//  Double_t tsize=0.032;
+ TMarker *marker = new TMarker(x-(0.4*tsize),y,8);
+ marker->SetMarkerColor(color);  marker->SetNDC();
+ marker->SetMarkerStyle(mstyle);
+ marker->SetMarkerSize(msize);
+ marker->Draw();
+
+ TLatex l; l.SetTextAlign(12); l.SetTextSize(tsize);
+ l.SetNDC();
+ l.DrawLatex(x,y,text);
 }
 
 void Bzmath(){
@@ -143,14 +163,24 @@ void Bzmath(){
 	tc->SaveAs("Allfunctions.pdf");
 	delete tc;
 	/* start of the function color plot*/
-	tc = new TCanvas("tc","Centrality",720,680);
+	tc = new TCanvas("tc","Centrality",700,600);
 	//tc->Divide(1,2,.001,.001);
 	//tc->cd(1);
-	nicehists::makeHistColors(function,classes);
-	TLegend *tl=new TLegend(.7,.6,.8,.9,"wounded nucleon model p-Pb 5.02 TeV boost corrected");
-	nicehists::makeLegend(tl,function,classes,centrality);
+	nicehists::makeLineColors(function,classes);
+	TLegend *tl=new TLegend(.4,.12,.6,.4);
+	nicehists::makeLegendLine(tl,function,4,centrality);
+	tl->SetLineColor(kWhite);
+	TLegend *tl2= new TLegend(.6,.12,.8,.4);
+	TLegend *titlelegend = new TLegend(.4,.34,.88,.5,"wounded nucleon model p-Pb 5.02 TeV boost corrected");
+	tl2->SetLineColor(kWhite);
+	nicehists::makeLegendLine(tl2,function+4,4,centrality+4);
 	function[0]->SetAxisRange(0,4.09,"Y");
-	function[0]->GetYaxis()->SetTitleOffset(0.6);
+	function[0]->GetYaxis()->SetTitleOffset(0.7);
+	function[0]->GetYaxis()->SetLabelSize(0.03);
+	function[0]->GetXaxis()->SetLabelSize(0.03);
+	function[0]->GetYaxis()->SetTitleSize(0.03);
+	function[0]->SetTitleSize(0.03);
+	function[0]->GetXaxis()->SetTitleSize(0.03);
 	//F(#eta) wounded nucleon model p-Pb 5.02 TeV boost corrected
 	function[0]->SetTitle("");
 	function[0]->SetTitleSize(.1);
@@ -160,10 +190,14 @@ void Bzmath(){
 	{
 		function[i]->Draw("l hist same");
 	}
+	titlelegend->SetLineColor(kWhite);
+	titlelegend->Draw();
 	tl->Draw();
+	tl2->Draw();
+	gPad->SetTopMargin(0.03);
 	gPad->SetTicky();
 	gPad->SetTickx();
-	
+
 	//gPad->SetBottomMargin(.2);
 	tc->SaveAs("functioncolor.pdf");
 }

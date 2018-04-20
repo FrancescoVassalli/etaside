@@ -60,7 +60,8 @@ void bindistmaker(){
     	}
     	splithists[i]->SetAxisRange(0,.85,"Y");
     	splithists[i]->Draw();
-    	tc->Write();
+        splithists[i]->Write();
+    	
     }
     output->Close();
     delete output;

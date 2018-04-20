@@ -20,10 +20,28 @@ struct StarParticle
 };
 
 namespace global{
-  const int nBins=53;
-  double bins[54]= {-2.7,-2.6,-2.5,-2.4,-2.3,-2.2,-2.1,-2,-1.9,-1.8,-1.7,-1.6,-1.5,-1.4,-1.3,-1.2,-1.1,-1,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.05,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6};
-  TH1F *binfinder = new TH1F("binner","",nBins,bins);
+  const int nBins=80;
+  double bins[81];
 }
+
+class BinMachine
+{
+public:
+  BinMachine(){
+    binfinder = new TH1F("binner","",global::nBins,global::bins);
+  }
+  ~BinMachine();
+  int getBinN(float in){
+    int r = this->binfinder->FindBin((double)in,0,0);
+    if(r<0||r>global::nBins+1){
+      r=-1;
+    }
+    return r;
+  }
+private:
+  TH1F *binfinder;
+  
+};
 
 TLorentzVector* pToTLV(Vec4 in){
 	Double_t px = (double)in.px();
@@ -33,13 +51,13 @@ TLorentzVector* pToTLV(Vec4 in){
 	TLorentzVector *out = new TLorentzVector(px,py,pz,e);
 	return out;
 }
-inline int calcBinNumber(float in){
-  int r = global::binfinder->FindBin((double)in,0,0);
-  if(!(r>=0&&r<54)){
+/*inline int calcBinNumber(float in){
+  int r = binfinder->FindBin((double)in,0,0);
+  if(!(r>=0&&r<global::nBins+1)){
     r=-1;
   }
   return r;
-}
+}*/
 void check(std::vector<Particle> v, std::vector<float> etas2){
 	cout<<"back: "<<v.back().y()<<"\n";
 	cout<<"eta diff"<<v.back().y()-v[0].y()<<" : "<<etas2.back()-etas2[0]<<"\n"; // see if the delta eta is boost invarient
@@ -62,7 +80,9 @@ void makedata(string filename){
   float beta[global::nBins+1];
   string temp;
   string etastr="eta";
+  const float binstart = -4;
   for(int i=0; i<=global::nBins;i++){
+    global::bins[i]= binstart + .1*i;
     temp = etastr+ std::to_string(i);
     t->Branch(temp.c_str(),&beta[i]);
   }
@@ -73,6 +93,7 @@ void makedata(string filename){
   std::vector<Particle> myparticles(0);
   Particle ptemp;
   std::vector<float> eta2s(0);
+  BinMachine *bm= new BinMachine();
   for(int iEvent=0; iEvent<1000; iEvent++){
   	if(iEvent%30==0)  
   		cout<<"Event N: "<<iEvent<<'\n';
@@ -97,12 +118,12 @@ void makedata(string filename){
       		ptemp= pythia.event.at(i);
       		tlv= pToTLV(ptemp.p());
       		eta = pythia.event.at(i).eta();
-          //cout<<"pre: "<<eta;
+          cout<<"pre rapidity: "<<pythia.event.at(i).y();
       		tlv->Boost(0,0,boostB);
       		eta2 = (float) tlv->Eta();
-          //cout<<" post: "<<eta2;
+          cout<<" post: "<<tlv->Rapidity()<<'\n';
           tl2 = new TLorentzVector(tlv->Px(),tlv->Py(),tlv->Pz(),tlv->E());
-          binNumber = calcBinNumber(eta2);
+          binNumber = bm->getBinN(eta2);
           if (binNumber>=0)
           {
             tl2->Boost(0,0,-1*boostB);
